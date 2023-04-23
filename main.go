@@ -41,9 +41,8 @@ func sse(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	    http.ServeFile(w, r, "index.html")
-    })
+    http.Handle("/", http.FileServer(http.Dir("static")))
     http.HandleFunc("/sse", sse)
+
     http.ListenAndServe(":8080", nil)
 }

@@ -33,6 +33,7 @@ func sse(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("err: %v", err)
 	}
 	
+	fmt.Fprintf(w, "event: memory\n")
         fmt.Fprintf(w, "data: %v\n\n", string(b))
         w.(http.Flusher).Flush()
 

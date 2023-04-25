@@ -1,5 +1,6 @@
 const ctx = document.getElementById('myChart');
-const plot = new Chart(ctx, {
+
+const config = {
 	type: 'line',
 	data: {
 		labels: [],
@@ -15,11 +16,18 @@ const plot = new Chart(ctx, {
 			y: {
 				suggestedMin: 0,
 				suggestedMax: 16
+			},
+			x: {
+				ticks: {
+					display: false
+				}
 			}
 		},
 		responsive: true,
 	},
-});
+};
+
+const plot = new Chart(ctx, config)
 
 const eventSource = new EventSource("/sse");
 

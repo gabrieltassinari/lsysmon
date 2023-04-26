@@ -32,12 +32,16 @@ const plot = new Chart(ctx, config)
 const eventSource = new EventSource("/sse");
 
 eventSource.addEventListener('memory', e => {
-	let json = e.data;
-	let obj = JSON.parse(json);
+	//let json = e.data;
+	//let obj = JSON.parse(json);
 
-	addData(plot, obj);
+	//addData(plot, obj);
 
-	document.getElementById('sse').innerText = (obj.Free/1048576).toFixed(2);
+	//document.getElementById('sse').innerText = (obj.Free/1048576).toFixed(2);
+});
+
+eventSource.addEventListener('uptime', e => {
+	addData(plot, 1);
 });
 
 function addData(chart, data) {
@@ -49,8 +53,10 @@ function addData(chart, data) {
 		array.shift();
 	}
 
-	labels.push("1");
-	array.push((data.Free/1048576).toFixed(2));
+	console.log(data)
+	//labels.push("1");
+	//array.push((data.Free/1048576).toFixed(2));
+	array.push(data);
 
 	chart.update();
 }

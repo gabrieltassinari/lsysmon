@@ -1,5 +1,4 @@
 package main
-
 import (
     "fmt"
     "time"
@@ -14,12 +13,7 @@ type Memory struct{
 	Free int //`json:"Free"`
 }
 
-func sse(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/event-stream")
-    w.Header().Set("Cache-Control", "no-cache")
-    w.Header().Set("Connection", "keep-alive")
-
-    for {
+func memoryData() (string, string) {
 	mt, _ := lpfs.GetMemTotal()
 	mf, _ := lpfs.GetMemFree()
 
@@ -32,9 +26,43 @@ func sse(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
-	
-	fmt.Fprintf(w, "event: memory\n")
-        fmt.Fprintf(w, "data: %v\n\n", string(b))
+
+	event := "event: memory\n"
+	data := fmt.Sprintf("data: %v\n\n", string(b))
+
+	return event, data
+}
+
+func uptimeData() (string, string) {
+	uptime, _ := lpfs.GetUptimeSystem()
+
+	event := "event: uptime\n"
+	data := fmt.Sprintf("data: %f\n\n", uptime)
+
+	return event, data
+}
+
+
+func sse(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "text/event-stream")
+    w.Header().Set("Cache-Control", "no-cache")
+    w.Header().Set("Connection", "keep-alive")
+
+    for {
+
+	event, data := memoryData()
+
+	fmt.Fprintf(w, event)
+	fmt.Fprintf(w, data)
+
+	event, data = uptimeData()
+
+	fmt.Fprintf(w, event)
+	fmt.Fprintf(w, data)
+
+	//fmt.Fprintf(w, "event: %v\n", event)
+        //fmt.Fprintf(w, "data: %v\n\n", string(b))
+
         w.(http.Flusher).Flush()
 
 	time.Sleep(time.Second)

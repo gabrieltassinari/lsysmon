@@ -8,12 +8,14 @@ import (
     "github.com/rprobaina/lpfs"
 )
 
+var events string
+
 type Memory struct{
 	Total int //`json:"Total"`
 	Free int //`json:"Free"`
 }
 
-func memoryData() (string, string) {
+func memoryData() {
 	mt, _ := lpfs.GetMemTotal()
 	mf, _ := lpfs.GetMemFree()
 
@@ -21,51 +23,52 @@ func memoryData() (string, string) {
 		Total: mt, 
 		Free: mf, 
 	}
-
 	b, err := json.Marshal(msg)
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
 
-	event := "event: memory\n"
-	data := fmt.Sprintf("data: %v\n\n", string(b))
+	event := "memory"
+	data := fmt.Sprintf("%v", string(b))
 
-	return event, data
+	addEvent(event, data)
 }
 
-func uptimeData() (string, string) {
+func uptimeData() {
 	uptime, _ := lpfs.GetUptimeSystem()
 
-	event := "event: uptime\n"
-	data := fmt.Sprintf("data: %f\n\n", uptime)
+	event := "uptime"
+	data := fmt.Sprintf("%f", uptime)
 
-	return event, data
+	addEvent(event, data)
 }
 
+func addEvent(event string, data string) {
+	e := "event: " + event + "\n"
+	d := "data: " + data + "\n\n"
+
+	events += e
+	events += d
+}
 
 func sse(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/event-stream")
     w.Header().Set("Cache-Control", "no-cache")
     w.Header().Set("Connection", "keep-alive")
 
+
     for {
 
-	event, data := memoryData()
+	memoryData()
+	uptimeData()
 
-	fmt.Fprintf(w, event)
-	fmt.Fprintf(w, data)
-
-	event, data = uptimeData()
-
-	fmt.Fprintf(w, event)
-	fmt.Fprintf(w, data)
-
-	//fmt.Fprintf(w, "event: %v\n", event)
-        //fmt.Fprintf(w, "data: %v\n\n", string(b))
+	fmt.Printf(events)
+	fmt.Fprintf(w, events)
 
         w.(http.Flusher).Flush()
 
 	time.Sleep(time.Second)
+	events = ""
     }
 }
 

@@ -1,75 +1,45 @@
 package main
+
 import (
     "fmt"
     "time"
     "net/http"
-    "encoding/json"
 
-    "github.com/rprobaina/lpfs"
+    "lsysmon/data"
 )
 
-var events string
-
-type Memory struct{
-	Total int //`json:"Total"`
-	Free int //`json:"Free"`
-}
-
-func memoryData() {
-	mt, _ := lpfs.GetMemTotal()
-	mf, _ := lpfs.GetMemFree()
-
-	msg := Memory{
-		Total: mt, 
-		Free: mf, 
-	}
-	b, err := json.Marshal(msg)
-	if err != nil {
-		fmt.Printf("err: %v", err)
-	}
-
-	event := "memory"
-	data := fmt.Sprintf("%v", string(b))
-
-	addEvent(event, data)
-}
-
-func uptimeData() {
-	uptime, _ := lpfs.GetUptimeSystem()
-
-	event := "uptime"
-	data := fmt.Sprintf("%f", uptime)
-
-	addEvent(event, data)
-}
-
-func addEvent(event string, data string) {
-	e := "event: " + event + "\n"
-	d := "data: " + data + "\n\n"
-
-	events += e
-	events += d
-}
-
 func sse(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/event-stream")
-    w.Header().Set("Cache-Control", "no-cache")
-    w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
 
+	for {
 
-    for {
+		memorydata, err := data.Memory()
+		if err != nil {
+			return
+		}
+		fmt.Fprintf(w, memorydata)
 
-	memoryData()
-	uptimeData()
+		uptimedata, err := data.Uptime()
+		if err != nil {
+			return
+		}
+		fmt.Fprintf(w, uptimedata)
 
-	fmt.Printf(events)
-	fmt.Fprintf(w, events)
+		swapdata, err := data.Swap()
+		if err != nil {
+			return
+		}
 
-        w.(http.Flusher).Flush()
+		// Listen data on cli
+		fmt.Print(memorydata)
+		fmt.Print(uptimedata)
+		fmt.Print(swapdata)
 
-	time.Sleep(time.Second)
-	events = ""
-    }
+		w.(http.Flusher).Flush()
+		time.Sleep(time.Second)
+	}
 }
 
 func main() {

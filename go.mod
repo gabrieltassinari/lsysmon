@@ -1,4 +1,4 @@
-module main
+module lsysmon
 
 go 1.20
 

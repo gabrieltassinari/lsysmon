@@ -2,6 +2,7 @@ package data
 
 import (
     "fmt"
+    "net/http"
     "encoding/json"
 
     "github.com/rprobaina/lpfs"
@@ -18,15 +19,15 @@ type SwapJSON struct{
 	Used int
 }
 
-func Memory() (string, error) {
+func Memory(w http.ResponseWriter) error {
 	total, err := lpfs.GetMemTotal()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	free, err := lpfs.GetMemFree()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	msg := MemoryJSON {
@@ -36,28 +37,30 @@ func Memory() (string, error) {
 
 	b, err := json.Marshal(msg)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	data := fmt.Sprintf("event: memory\ndata: %v\n\n", string(b))
 
-	return data, nil
+	fmt.Fprintf(w, data)
+
+	return nil
 }
 
-func Swap() (string, error) {
+func Swap(w http.ResponseWriter) error {
 	filename, err := lpfs.GetSwapFilename()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	size, err := lpfs.GetSwapSize()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	used, err := lpfs.GetSwapUsed()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	msg := SwapJSON {
@@ -68,21 +71,25 @@ func Swap() (string, error) {
 
 	b, err := json.Marshal(msg)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	data := fmt.Sprintf("event: swap\ndata: %v\n\n", string(b))
 
-	return data, nil
+	fmt.Fprintf(w, data)
+
+	return nil
 }	
 
-func Uptime() (string, error) {
+func Uptime(w http.ResponseWriter) error {
 	uptime, err := lpfs.GetUptimeSystem()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	data := fmt.Sprintf("event: uptime\ndata: %f\n\n", uptime)
 
-	return data, nil
+	fmt.Fprintf(w, data)
+
+	return nil
 }

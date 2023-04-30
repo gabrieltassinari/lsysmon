@@ -46,6 +46,10 @@ eventSource.addEventListener('uptime', e => {
 	console.log(e);
 });
 
+eventSource.addEventListener('swap', e => {
+	console.log(e);
+});
+
 function addData(chart, data) {
 	const labels = chart.data.labels
 	const array = chart.data.datasets[0].data

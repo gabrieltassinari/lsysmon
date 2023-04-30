@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "time"
     "net/http"
 
@@ -15,27 +14,20 @@ func sse(w http.ResponseWriter, r *http.Request) {
 
 	for {
 
-		memorydata, err := data.Memory()
-		if err != nil {
-			return
-		}
-		fmt.Fprintf(w, memorydata)
-
-		uptimedata, err := data.Uptime()
-		if err != nil {
-			return
-		}
-		fmt.Fprintf(w, uptimedata)
-
-		swapdata, err := data.Swap()
+		err := data.Memory(w)
 		if err != nil {
 			return
 		}
 
-		// Listen data on cli
-		fmt.Print(memorydata)
-		fmt.Print(uptimedata)
-		fmt.Print(swapdata)
+		err = data.Uptime(w)
+		if err != nil {
+			return
+		}
+
+		err = data.Swap(w)
+		if err != nil {
+			return
+		}
 
 		w.(http.Flusher).Flush()
 		time.Sleep(time.Second)
@@ -43,8 +35,8 @@ func sse(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.Handle("/", http.FileServer(http.Dir("static")))
-    http.HandleFunc("/sse", sse)
+	http.Handle("/", http.FileServer(http.Dir("static")))
+	http.HandleFunc("/sse", sse)
 
-    http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", nil)
 }

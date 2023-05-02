@@ -9,7 +9,8 @@ import (
 )
 
 type MemoryJSON struct{
-	Total int 
+	Buffers int
+	Cached int
 	Free int 
 }
 
@@ -20,7 +21,12 @@ type SwapJSON struct{
 }
 
 func Memory(w http.ResponseWriter) error {
-	total, err := lpfs.GetMemTotal()
+	buffers, err := lpfs.GetMemBuffers()
+	if err != nil {
+		return err
+	}
+
+	cached, err := lpfs.GetMemCached()
 	if err != nil {
 		return err
 	}
@@ -31,7 +37,8 @@ func Memory(w http.ResponseWriter) error {
 	}
 
 	msg := MemoryJSON {
-		Total: total, 
+		Buffers: buffers,
+		Cached: cached,
 		Free: free, 
 	}
 

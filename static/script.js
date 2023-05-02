@@ -5,7 +5,7 @@ const config = {
 	data: {
 		labels: [],
 		datasets: [{
-			label: 'Free memory in gigabytes',
+			label: '',
 			data: [],
 			fill: true,
 			borderWidth: 1
@@ -28,6 +28,10 @@ const config = {
 };
 
 const plot = new Chart(ctx, config)
+
+// TODO: Create a request to /lables endpoint
+plot.config.options.scales.y.suggestedMax = 16
+plot.config.data.datasets[0].label = 'Free memory in x123'
 
 const eventSource = new EventSource("/sse");
 

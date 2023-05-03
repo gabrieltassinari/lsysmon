@@ -24,12 +24,12 @@ func sse(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-/*
+
 		err = data.Swap(w)
 		if err != nil {
 			return
 		}
-*/
+
 		w.(http.Flusher).Flush()
 		time.Sleep(time.Second)
 	}

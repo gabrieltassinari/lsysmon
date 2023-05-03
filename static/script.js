@@ -1,37 +1,6 @@
-const ctx = document.getElementById('myChart');
-
-const config = {
-	type: 'line',
-	data: {
-		labels: [],
-		datasets: [{
-			label: '',
-			data: [],
-			fill: true,
-			borderWidth: 1
-		}
-	]},
-	options : {
-		scales: {
-			y: {
-				suggestedMin: 0,
-				suggestedMax: 16
-			},
-			x: {
-				ticks: {
-					display: false
-				}
-			}
-		},
-		responsive: true,
-	},
-};
-
-const plot = new Chart(ctx, config)
-
-// TODO: Create a request to /lables endpoint
-plot.config.options.scales.y.suggestedMax = 16
-plot.config.data.datasets[0].label = 'Free memory in x123'
+const response = await fetch("http://localhost:8080/labels");
+const jsonData = await response.json();
+console.log(jsonData);
 
 const eventSource = new EventSource("/sse");
 
@@ -41,9 +10,7 @@ eventSource.addEventListener('memory', e => {
 	let json = e.data;
 	let obj = JSON.parse(json);
 
-	addData(plot, (obj.Free/1048576).toFixed(2));
-
-	document.getElementById('sse').innerText = (obj.Free/1048576).toFixed(2);
+	addData(memoryPlot, (obj.Free/1048576).toFixed(2));
 });
 
 eventSource.addEventListener('uptime', e => {
@@ -52,6 +19,11 @@ eventSource.addEventListener('uptime', e => {
 
 eventSource.addEventListener('swap', e => {
 	console.log(e);
+
+	let json = e.data;
+	let obj = JSON.parse(json);
+
+	addData(swapPlot, obj.Used/1048576);
 });
 
 function addData(chart, data) {

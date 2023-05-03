@@ -8,13 +8,13 @@ import (
     "github.com/rprobaina/lpfs"
 )
 
-type MemoryJSON struct{
+type memoryJSON struct{
 	Buffers int
 	Cached int
 	Free int 
 }
 
-type SwapJSON struct{
+type swapJSON struct{
 	Filename string
 	Size int
 	Used int
@@ -36,7 +36,7 @@ func Memory(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := MemoryJSON {
+	msg := memoryJSON {
 		Buffers: buffers,
 		Cached: cached,
 		Free: free, 
@@ -70,7 +70,7 @@ func Swap(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := SwapJSON {
+	msg := swapJSON {
 		Filename: filename,
 		Size: size,
 		Used: used,

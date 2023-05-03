@@ -7,18 +7,18 @@ import (
 	"github.com/rprobaina/lpfs"
 )
 
-type SwapLabel struct {
+type swapLabels struct {
 	Name string
 	Size int
 }
 
-type MemoryLabel struct {
+type memoryLabels struct {
 	Total int
 }
 
-type Json struct {
-	SwapLabel SwapLabel
-	MemoryLabel MemoryLabel
+type jsonLabels struct {
+	SwapLabel swapLabels	 `json:"swap"`
+	MemoryLabel memoryLabels `json:"memory"`
 }
 
 func Labels(w http.ResponseWriter) error {
@@ -37,12 +37,12 @@ func Labels(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := Json {
-		SwapLabel {
+	msg := jsonLabels {
+		swapLabels {
 			Name: sn,
 			Size: ss,
 		},
-		MemoryLabel {
+		memoryLabels {
 			Total: mt,
 		},
 	}

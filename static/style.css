@@ -1,0 +1,11 @@
+.container{
+	display: flex;
+	justify-content: center;
+	height: 50vh;
+}
+
+.chart{
+	height: 50vh;
+	width: 45vw;
+	margin: 5px;
+}

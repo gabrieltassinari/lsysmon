@@ -6,20 +6,29 @@ const memoryConfig = {
 			label: '',
 			data: [],
 			fill: true,
-			borderWidth: 1
+			borderWidth: 1,
+			pointRadius: 0,
 		}
 	]},
 	options : {
 		scales: {
 			y: {
 				suggestedMin: 0,
-				//suggestedMax: 16,
+				suggestedMax: 16,
 			},
 			x: {
+				grid: {
+					display: false,
+				},
 				ticks: {
 					display: false
 				}
 			}
+		},
+		interaction: {
+			mode: 'nearest',
+			axis: 'x',
+			intersect: false,
 		},
 		responsive: true,
 	},
@@ -33,7 +42,8 @@ const swapConfig = {
 			label: '',
 			data: [],
 			fill: true,
-			borderWidth: 1
+			borderWidth: 1,
+			pointRadius: 0,
 		}
 	]},
 	options : {
@@ -43,10 +53,18 @@ const swapConfig = {
 				//suggestedMax: 16
 			},
 			x: {
+				grid: {
+					display: false,
+				},
 				ticks: {
 					display: false
 				}
 			}
+		},
+		interaction: {
+			mode: 'nearest',
+			axis: 'x',
+			intersect: false,
 		},
 		responsive: true,
 	},

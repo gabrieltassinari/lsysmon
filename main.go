@@ -6,6 +6,7 @@ import (
     "fmt"
 
     "lsysmon/data"
+    "lsysmon/logs"
 )
 
 func sse(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +30,8 @@ func sse(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+
+		logs.Logs()
 
 		w.(http.Flusher).Flush()
 		time.Sleep(time.Second)

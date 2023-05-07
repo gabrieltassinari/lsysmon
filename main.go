@@ -31,6 +31,11 @@ func sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		err = data.ProcessesStat(w)
+		if err != nil {
+			return
+		}
+
 		logs.Logs()
 
 		w.(http.Flusher).Flush()

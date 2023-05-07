@@ -20,6 +20,21 @@ type swapJSON struct{
 	Used int
 }
 
+func ProcessesStat(w http.ResponseWriter) error {
+	pps, err := lpfs.GetPerProcessStat()
+	if err != nil {
+		return err
+	}
+
+	b, _ := json.Marshal(pps)
+
+	data := fmt.Sprintf("event: process\ndata: %v\n\n", string(b))
+
+	fmt.Fprintf(w, data)
+
+	return nil
+}
+
 func Memory(w http.ResponseWriter) error {
 	buffers, err := lpfs.GetMemBuffers()
 	if err != nil {

@@ -26,6 +26,13 @@ eventSource.addEventListener('swap', e => {
 	addData(swapPlot, obj.Used/1048576);
 });
 
+eventSource.addEventListener('process', e => {
+	console.log(e);
+	let obj = JSON.parse(e.data);
+	console.log(obj[0]);
+	console.log(obj[1]);
+});
+
 function addData(chart, data) {
 	const labels = chart.data.labels
 	const array = chart.data.datasets[0].data

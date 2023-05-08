@@ -31,6 +31,7 @@ const memoryConfig = {
 			intersect: false,
 		},
 		responsive: true,
+		animation: false,
 	},
 };
 

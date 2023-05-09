@@ -65,7 +65,8 @@ eventSource.addEventListener('process', e => {
 		rows.appendChild(tr);
 	}
 
-	addData(memoryPlot, procMemory);
+	// TODO: Append data in plots
+	addData(memoryPlot, obj[procMemory].Utime);
 });
 
 function addData(chart, data) {

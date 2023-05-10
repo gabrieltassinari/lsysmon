@@ -27,7 +27,7 @@ eventSource.addEventListener('swap', e => {
 });
 
 
-let procMemory = 1;
+let currentPid = 1;
 
 eventSource.addEventListener('process', e => {
 	console.log(e);
@@ -59,14 +59,15 @@ eventSource.addEventListener('process', e => {
 			memoryPlot.data.labels = [];
 			console.log(`${obj[i].Pid}`);
 
-			procMemory = obj[i].Pid;
+			currentPid = i;
 		}
 
 		rows.appendChild(tr);
 	}
 
 	// TODO: Append data in plots
-	addData(memoryPlot, obj[procMemory].Utime);
+	addData(memoryPlot, obj[currentPid].Pid);
+	addData(cstimePlot, obj[currentPid].Cstime);
 });
 
 function addData(chart, data) {

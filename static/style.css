@@ -1,11 +1,40 @@
 .container{
-	display: flex;
-	justify-content: center;
-	height: 50vh;
+	border: 1px solid red;
+	display: grid;
+	grid-template-areas:
+	"list utime memory"
+	"list swap cstime";
+	grid-template-columns: 33vw 33vw 33vw;
+	grid-template-rows: 50vh 50vh;
 }
 
+/*#charts {grid-area: charts;}*/
+
+.utime {grid-area: utime;}
+.memory {grid-area: memory;}
+.swap {grid-area: swap;}
+.cstime {grid-area: cstime;}
+
 .chart{
-	height: 50vh;
-	width: 45vw;
+	width: 100%;
 	margin: 5px;
+}
+
+table {
+	grid-area: list;
+}
+
+thead, tbody {
+	display: block;
+}
+
+thead {height 5vh;}
+
+th {padding-right: 8vw;}
+
+tbody {
+	scrollbar-width: none;
+	height: 90vh;
+	overflow-y: auto;
+	overflow-x: hidden;
 }

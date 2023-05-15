@@ -3,34 +3,22 @@ const jsonData = await response.json();
 console.log(jsonData);
 
 const eventSource = new EventSource("/sse");
-/*
+
 eventSource.addEventListener('memory', e => {
 	console.log(e);
-
-	let json = e.data;
-	let obj = JSON.parse(json);
-
-	addData(memoryPlot, (obj.Free/1048576).toFixed(2));
 });
-*/
+
 eventSource.addEventListener('uptime', e => {
 	console.log(e);
 });
 
 eventSource.addEventListener('swap', e => {
 	console.log(e);
-
-	let json = e.data;
-	let obj = JSON.parse(json);
-
-	addData(swapPlot, obj.Used/1048576);
 });
-
 
 let currentPid = 1;
 
 eventSource.addEventListener('process', e => {
-	console.log(e);
 	let obj = JSON.parse(e.data);
 
 	let rows = document.getElementById("rows")
@@ -57,7 +45,10 @@ eventSource.addEventListener('process', e => {
 		tr.onclick = function() {
 			memoryPlot.data.datasets[0].data = [];
 			memoryPlot.data.labels = [];
-			console.log(`${obj[i].Pid}`);
+
+			for (let j = 0; j < 4; ++j)
+				ptimePlot.data.datasets[j].data = [];
+			ptimePlot.data.labels = [];
 
 			currentPid = i;
 		}
@@ -67,8 +58,27 @@ eventSource.addEventListener('process', e => {
 
 	// TODO: Append data in plots
 	addData(memoryPlot, obj[currentPid].Pid);
-	addData(cstimePlot, obj[currentPid].Cstime);
+	ptimePlotData(obj[currentPid]);
 });
+
+function ptimePlotData(data) {
+	const labels = ptimePlot.data.labels
+	const array = ptimePlot.data.datasets
+
+	if (array[0].data.length > 50) {
+		for (let i = 0; i < 4; ++i)
+			array[i].data.shift();
+		labels.shift();
+	}
+
+	array[0].data.push(data.Utime);
+	array[1].data.push(data.Stime);
+	array[2].data.push(data.Cutime);
+	array[3].data.push(data.Cstime);
+	labels.push("1");
+
+	ptimePlot.update();
+}
 
 function addData(chart, data) {
 	const labels = chart.data.labels
@@ -79,8 +89,8 @@ function addData(chart, data) {
 		array.shift();
 	}
 
-	labels.push("1");
 	array.push(data);
+	labels.push("1");
 
 	chart.update();
 }

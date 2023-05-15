@@ -1,32 +1,24 @@
 .container{
-	border: 1px solid red;
 	display: grid;
 	grid-template-areas:
-	"list utime memory"
-	"list swap cstime";
+	"list ptime ptime"
+	"list memory swap";
 	grid-template-columns: 33vw 33vw 33vw;
-	grid-template-rows: 50vh 50vh;
+	grid-template-rows: 33vh 33vh 33vh;
 }
 
-/*#charts {grid-area: charts;}*/
-
-.utime {grid-area: utime;}
+.ptime {grid-area: ptime;}
 .memory {grid-area: memory;}
 .swap {grid-area: swap;}
-.cstime {grid-area: cstime;}
 
 .chart{
 	width: 100%;
 	margin: 5px;
 }
 
-table {
-	grid-area: list;
-}
+table {grid-area: list;}
 
-thead, tbody {
-	display: block;
-}
+thead, tbody {display: block;}
 
 thead {height 5vh;}
 

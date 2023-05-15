@@ -4,11 +4,34 @@ const memoryPlot = createChart(memoryCtx, [], 'Free memory (GB/s)');
 const swapCtx = document.getElementById('swap');
 const swapPlot = createChart(swapCtx, [], 'Swap in use (GB/s)');
 
-const utimeCtx = document.getElementById('utime');
-const utimePlot = createChart(utimeCtx, [], 'Utime');
+const ptimeCtx = document.getElementById('ptime');
+const ptimePlot = createChart(ptimeCtx, [], 'Process time');
 
-const cstimeCtx = document.getElementById('cstime');
-const cstimePlot = createChart(cstimeCtx, [], 'cstime');
+ptimePlot.options.maintainAspectRatio = false
+ptimePlot.data.datasets = [{
+				label: "Utime",
+				data: [],
+				borderWidth: 1,
+				pointRadius: 0,
+			},
+			{
+				label: "Stime",
+				data: [],
+				borderWidth: 1,
+				pointRadius: 0,
+			},
+			{
+				label: "Cutime",
+				data: [],
+				borderWidth: 1,
+				pointRadius: 0,
+			},
+			{
+				label: "Cstime",
+				data: [],
+				borderWidth: 1,
+				pointRadius: 0,
+			}]
 
 function createChart(ctx, data, label) {
 	return new Chart(ctx, {
@@ -18,7 +41,6 @@ function createChart(ctx, data, label) {
 			datasets: [{
 				label: label,
 				data: data,
-				fill: true,
 				borderWidth: 1,
 				pointRadius: 0,
 			}

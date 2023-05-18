@@ -36,7 +36,6 @@ func sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		logs.Logs()
 
 		w.(http.Flusher).Flush()
 		time.Sleep(time.Second)
@@ -57,6 +56,15 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/sse", sse)
 	http.HandleFunc("/labels", labels)
+
+	errs := make(chan error, 1)
+	go logs.Logs(errs)
+	go func() {
+		for {
+			err := <- errs
+			fmt.Println(err)
+		}
+	}()
 
 	http.ListenAndServe(":8080", nil)
 }

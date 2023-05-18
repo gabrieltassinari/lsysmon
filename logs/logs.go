@@ -4,31 +4,50 @@ import (
 	"time"
 	"fmt"
 	"os"
+	"encoding/json"
 
 	"github.com/rprobaina/lpfs"
 )
 
-func Logs() error {
+const logfile = "logs.txt"
 
-	file, err := os.OpenFile("./logs.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Errorf("unable to open the file logs.txt")
-		return err
+type jsonObject struct {
+	Date string
+	Processes []lpfs.Procstat
+}
+
+func Logs(errs chan error) {
+	for {
+		file, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			errs <- fmt.Errorf("Logs: unable to open %s file: %v", logfile, err)
+		}
+
+		t := time.Now().Format(time.DateTime)
+
+		p, err := lpfs.GetPerProcessStat()
+		if err != nil {
+			errs <- fmt.Errorf("Logs: unable to get processes stats: %v", err)
+		}
+
+		msg := jsonObject {
+			Date: t,
+			Processes: p,
+		}
+		b, _ := json.Marshal(msg)
+
+		_, err = file.Write(b)
+		if err != nil {
+			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
+		}
+
+		_, err = file.WriteString("\n")
+		if err != nil {
+			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
+		}
+
+		file.Close()
+
+		time.Sleep(time.Minute)
 	}
-
-	t := time.Now().Format(time.DateTime)
-	c, _ := lpfs.GetMemCached()
-	f, _ := lpfs.GetSwapFilename()
-
-	msg := fmt.Sprintf("Date: %v Memory: %v Swapfile: %v\n", t, c, f)
-
-	_, err = file.WriteString(msg)
-	if err != nil {
-		fmt.Errorf("unable to write in the file logs.txt")
-		return err
-	}
-
-	file.Close()
-
-	return nil
 }

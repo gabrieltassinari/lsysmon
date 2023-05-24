@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"encoding/json"
+	"bufio"
 
 	"github.com/rprobaina/lpfs"
 )
@@ -12,7 +13,7 @@ import (
 const logfile = "logs.txt"
 
 type jsonObject struct {
-	Date string
+	Date      string
 	Processes []lpfs.Procstat
 }
 
@@ -30,8 +31,8 @@ func Logs(errs chan error) {
 			errs <- fmt.Errorf("Logs: unable to get processes stats: %v", err)
 		}
 
-		msg := jsonObject {
-			Date: t,
+		msg := jsonObject{
+			Date:      t,
 			Processes: p,
 		}
 		b, _ := json.Marshal(msg)
@@ -49,5 +50,34 @@ func Logs(errs chan error) {
 		file.Close()
 
 		time.Sleep(time.Minute)
+	}
+}
+
+func LogsRead(interval string, errs chan error) {
+	file, err := os.Open(logfile)
+	if err != nil {
+		errs <- fmt.Errorf("LogsRead: unable to open %s file: %v", logfile, err)
+	}
+
+	fscanner := bufio.NewScanner(file)
+
+	buffer := make([]byte, 0, bufio.MaxScanTokenSize)
+	fscanner.Buffer(buffer, 1024*1024)
+
+	start, _ := time.Parse(time.DateTime, interval)
+
+	endstr := time.Now().Format(time.DateTime)
+	end, _ := time.Parse(time.DateTime, endstr)
+
+	// Iterating each line of the file
+	for fscanner.Scan() {
+		line := fscanner.Text()
+		date, err := time.Parse(time.DateTime, line[9:28])
+		if err != nil {
+			errs <- fmt.Errorf("LogsRead: unable to parse date from %s file: %v", logfile, err)
+
+		if date.After(start) && date.Before(end) {
+			// TODO: Append the line to a string slice
+		}
 	}
 }

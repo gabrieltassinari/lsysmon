@@ -53,10 +53,10 @@ func Logs(errs chan error) {
 	}
 }
 
-func LogsRead(interval string, errs chan error) {
+func LogsRead(interval string) (string, error) {
 	file, err := os.Open(logfile)
 	if err != nil {
-		errs <- fmt.Errorf("LogsRead: unable to open %s file: %v", logfile, err)
+		return "", fmt.Errorf("unable to open %s file: %v", logfile, err)
 	}
 
 	fscanner := bufio.NewScanner(file)
@@ -64,20 +64,35 @@ func LogsRead(interval string, errs chan error) {
 	buffer := make([]byte, 0, bufio.MaxScanTokenSize)
 	fscanner.Buffer(buffer, 1024*1024)
 
-	start, _ := time.Parse(time.DateTime, interval)
+	var start time.Time
 
 	endstr := time.Now().Format(time.DateTime)
 	end, _ := time.Parse(time.DateTime, endstr)
 
+	if interval == "day" {
+		start = end.AddDate(0, 0, -1)
+	}
+	if interval == "week" {
+		start = end.AddDate(0, 0, -7)
+	}
+	if interval == "month" {
+		start = end.AddDate(0, -1, 0)
+	}
+
+	s := "["
 	// Iterating each line of the file
 	for fscanner.Scan() {
 		line := fscanner.Text()
 		date, err := time.Parse(time.DateTime, line[9:28])
 		if err != nil {
-			errs <- fmt.Errorf("LogsRead: unable to parse date from %s file: %v", logfile, err)
+			return "", fmt.Errorf("unable to parse date from %s file: %v", logfile, err)
+		}
 
 		if date.After(start) && date.Before(end) {
-			// TODO: Append the line to a string slice
+			s += line + ","
 		}
 	}
+	s = s[:len(s)-1] + "]"
+
+	return s, nil
 }

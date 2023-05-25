@@ -57,21 +57,22 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	/*
-	Query URL to get interval value
 	f := r.URL.Query()
 	interval := f["interval"]
-	*/
 
-	// TODO: Return filtered data
-	w.Write([]byte("logsData\n"))
+	data, err := logs.LogsRead(interval[0])
+	if err != nil {
+		return
+	}
+
+	w.Write([]byte(data))
 }
 
 func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/sse", sse)
 	http.HandleFunc("/labels", labels)
-
+	http.HandleFunc("/logs", logsHandler)
 
 	errs := make(chan error, 1)
 	go logs.Logs(errs)
@@ -81,9 +82,6 @@ func main() {
 			fmt.Println(err)
 		}
 	}()
-	http.HandleFunc("/logs", logsHandler)
-
-	logs.LogsRead("2023-05-24 16:56:34", errs)
 
 	http.ListenAndServe(":8080", nil)
 }

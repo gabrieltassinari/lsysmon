@@ -1,19 +1,36 @@
 const response = await fetch("http://localhost:8080/labels");
 const jsonData = await response.json();
-console.log(jsonData);
 
 const eventSource = new EventSource("/sse");
 
+var selectRange= document.getElementById('opts');
+
+selectRange.addEventListener('change', function() {
+	if (this.value != "runtime") {
+		eventSource.close()
+
+		const jsonData = fetch(`http://localhost:8080/logs?interval=${this.value}`)
+			.then((response) => {
+				return response.json();
+			})
+
+		// TODO: Plot data from request
+
+	} else {
+		eventSource = new EventSource("/sse");
+	}
+});
+
 eventSource.addEventListener('memory', e => {
-	console.log(e);
+	//console.log(e);
 });
 
 eventSource.addEventListener('uptime', e => {
-	console.log(e);
+	//console.log(e);
 });
 
 eventSource.addEventListener('swap', e => {
-	console.log(e);
+	//console.log(e);
 });
 
 let currentPid = 1;

@@ -15,14 +15,55 @@ selectRange.addEventListener('change', function() {
 		clearPlotData(ptimePlot);
 		clearPlotData(memoryPlot);
 
-		const jsonData = fetch(`http://localhost:8080/logs?interval=${this.value}`)
-			.then((response) => {
-				return response.json();
+		fetch(`http://localhost:8080/logs?interval=${this.value}`)
+			.then((response) => response.json())
+			.then((data) => {
+				var map = new Map();
+
+				// Search all pid along log file
+				for (let i = 0; i < data.length; ++i) {
+					for (let j = 0; j < data[i].Processes.length; ++j) {
+						map.set(data[i].Processes[j].Pid, data[i].Processes[j].Comm)
+					}
+				}
+
+				let rows = document.getElementById("rows")
+				rows.innerHTML = "";
+
+				// Create table row for each process
+				for (let item of map) {
+					const tr = document.createElement('tr');
+
+					const pid = document.createElement('td');
+					pid.innerText = item[0];
+					tr.append(pid);
+
+					const comm = document.createElement('td');
+					comm.innerText = item[1];
+					tr.append(comm);
+
+					tr.onclick = function() {
+						clearPlotData(ptimePlot);
+						clearPlotData(memoryPlot);
+
+						for (let i = 0; i < data.length; ++i) {
+							for (let j = 0; j < data[i].Processes.length; ++j) {
+								if (data[i].Processes[j].Pid == item[0]) {
+									addPlotData(ptimePlot, data[i].Processes[j]);
+									break
+								}
+							}
+						}
+					}
+					rows.appendChild(tr);
+				}
+
 			})
-
-		// TODO: Plot data from request
-
+			.catch(console.error);
 	} else {
+		clearPlotData(ptimePlot);
+		clearPlotData(memoryPlot);
+
 		eventSource = new EventSource("/sse");
 		addListeners();
 	}
@@ -43,6 +84,7 @@ function addListeners() {
 
 	eventSource.addEventListener('process', e => {
 		let obj = JSON.parse(e.data);
+		//console.log(obj[currentPid]);
 
 		let rows = document.getElementById("rows")
 

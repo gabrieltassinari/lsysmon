@@ -6,6 +6,8 @@ import (
 	"os"
 	"encoding/json"
 	"bufio"
+	"bytes"
+	"net/http"
 
 	"github.com/rprobaina/lpfs"
 )
@@ -53,10 +55,10 @@ func Logs(errs chan error) {
 	}
 }
 
-func LogsRead(interval string) (string, error) {
+func LogsRead(w http.ResponseWriter, interval string) error {
 	file, err := os.Open(logfile)
 	if err != nil {
-		return "", fmt.Errorf("unable to open %s file: %v", logfile, err)
+		return fmt.Errorf("unable to open %s file: %v", logfile, err)
 	}
 
 	fscanner := bufio.NewScanner(file)
@@ -65,34 +67,44 @@ func LogsRead(interval string) (string, error) {
 	fscanner.Buffer(buffer, 1024*1024)
 
 	var start time.Time
+	var find []byte
 
 	endstr := time.Now().Format(time.DateTime)
-	end, _ := time.Parse(time.DateTime, endstr)
+	end, err := time.Parse(time.DateTime, endstr)
+	if err != nil {
+		return fmt.Errorf("unable to parse date in %s file: %v", logfile, err)
+	}
 
+	// TODO: Handle when last day/month doesnt have data
 	if interval == "day" {
 		start = end.AddDate(0, 0, -1)
+		find = []byte(start.Format(time.DateOnly)[:10])
 	}
+
 	if interval == "week" {
+		// TODO: FIX WEEK
 		start = end.AddDate(0, 0, -7)
 	}
+
 	if interval == "month" {
-		start = end.AddDate(0, -1, 0)
+		start = end.AddDate(0, 0, 0)
+		find = []byte(start.Format(time.DateOnly)[:7])
 	}
 
-	s := "["
+	s := []byte("[")
+
 	// Iterating each line of the file
 	for fscanner.Scan() {
-		line := fscanner.Text()
-		date, err := time.Parse(time.DateTime, line[9:28])
-		if err != nil {
-			return "", fmt.Errorf("unable to parse date from %s file: %v", logfile, err)
-		}
-
-		if date.After(start) && date.Before(end) {
-			s += line + ","
+		if bytes.Contains(fscanner.Bytes(), find) {
+			s = append(s, fscanner.Bytes()...)
+			s = append(s, []byte(",")...)
 		}
 	}
-	s = s[:len(s)-1] + "]"
 
-	return s, nil
+	s = s[:len(s)-1]
+	s = append(s, []byte("]")...)
+
+	w.Write([]byte(s))
+
+	return nil
 }

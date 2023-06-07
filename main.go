@@ -54,18 +54,15 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
-
 	}
 
 	f := r.URL.Query()
 	interval := f["interval"]
 
-	data, err := logs.LogsRead(interval[0])
+	err := logs.LogsRead(w, interval[0])
 	if err != nil {
 		return
 	}
-
-	w.Write([]byte(data))
 }
 
 func main() {

@@ -49,7 +49,7 @@ selectRange.addEventListener('change', function() {
 						for (let i = 0; i < data.length; ++i) {
 							for (let j = 0; j < data[i].Processes.length; ++j) {
 								if (data[i].Processes[j].Pid == item[0]) {
-									addPlotData(ptimePlot, data[i].Processes[j]);
+									addPlotData(ptimePlot, data[i].Processes[j], data[i].Date);
 									break
 								}
 							}
@@ -116,9 +116,28 @@ function addListeners() {
 			rows.appendChild(tr);
 		}
 
-		addPlotData(memoryPlot, obj[currentPid].Pid);
-		addPlotData(ptimePlot, obj[currentPid]);
+		let date = new Date();
+
+		let year = dateZero(date.getFullYear()+"");
+		let month = dateZero(date.getMonth()+"");
+		let day = dateZero(date.getDate()+"");
+
+		let hour = dateZero(date.getHours()+"")
+		let minutes = dateZero(date.getMinutes()+"")
+		let seconds = dateZero(date.getSeconds()+"")
+
+		let fdate = year + "-" + month + "-" + day  + " "
+		let datetime = fdate + hour + ":" + minutes + ":" + seconds
+
+		addPlotData(memoryPlot, obj[currentPid].Pid, datetime);
+		addPlotData(ptimePlot, obj[currentPid], datetime);
 	});
+}
+
+function dateZero(date) {
+	if (date.length == 1)
+		return "0" + date;
+	return date
 }
 
 function clearPlotData(chart) {
@@ -135,34 +154,34 @@ function clearPlotData(chart) {
 	chart.update();
 }
 
-function addPlotData(chart, data) {
+function addPlotData(chart, data, label) {
 	const labels = chart.data.labels
+	console.log(label)
 
 	if (chart == ptimePlot) {
 		const array = chart.data.datasets
 
-		if (array[0].data.length > 50) {
+		if (array[0].data.length > 50)
 			for (let i = 0; i < 4; ++i)
 				array[i].data.shift();
-			labels.shift();
-		}
 
 		array[0].data.push(data.Utime);
 		array[1].data.push(data.Stime);
 		array[2].data.push(data.Cutime);
 		array[3].data.push(data.Cstime);
-		labels.push("1");
+
 	} else {
 		const array = chart.data.datasets[0].data
 
-		if (array.length > 50) {
+		if (array.length > 50)
 			array.shift();
-			labels.shift();
-		}
-
 		array.push(data);
-		labels.push("1")
 	}
+
+	if (labels.length > 2)
+		labels.shift();
+
+	labels.push(label);
 
 	chart.update();
 }

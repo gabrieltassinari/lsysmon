@@ -1,3 +1,5 @@
+Chart.defaults.color = '#999999'
+
 const memoryCtx = document.getElementById('memory');
 const memoryPlot = createChart(memoryCtx, [], 'Free memory (GB/s)');
 
@@ -48,22 +50,27 @@ function createChart(ctx, data, label) {
 		options: {
 			scales: {
 				y: {
-					suggestedMin: 0,
-					suggestedMax: 16,
+					beginAtZero: true,
+					ticks: {
+						maxTicksLimit: 8,
+					}
 				},
 				x: {
 					grid: {
 						display: false
 					},
-					ticks: {
-						display: false
-					}
+					ticks: {}
 				}
 			},
 			interaction: {
 				mode: 'nearest',
 				axis: 'x',
 				intersect: false,
+			},
+			legend: {
+				labels: {
+					fontColor: 'white'
+				}
 			},
 			responsive: true,
 			animation: false,

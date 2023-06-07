@@ -1,10 +1,19 @@
+:root {
+	--color1: #161512;
+	--color2: #999999;
+}
+
+body {
+	background-color: var(--color1);
+}
+
 .container{
 	display: grid;
+	grid-template-columns: 33vw 33vw 33vw;
+	grid-template-rows: 33vh 33vh 33vh;
 	grid-template-areas:
 	"list ptime ptime"
 	"list memory swap";
-	grid-template-columns: 33vw 33vw 33vw;
-	grid-template-rows: 33vh 33vh 33vh;
 }
 
 .ptime {grid-area: ptime;}
@@ -16,7 +25,10 @@
 	margin: 5px;
 }
 
-table {grid-area: list;}
+table {
+	grid-area: list;
+	color: var(--color2);
+}
 
 thead, tbody {display: block;}
 

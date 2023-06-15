@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"log"
 	"net/http"
 	"time"
-	"fmt"
 
 	"lsysmon/data"
 	"lsysmon/logs"
@@ -17,21 +17,25 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	for {
 		err := data.Memory(w)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 
 		err = data.Uptime(w)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 
 		err = data.Swap(w)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 
 		err = data.ProcessesStat(w)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 
@@ -45,24 +49,26 @@ func labelsHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := data.Labels(w)
 	if err != nil {
-		s := fmt.Sprintf("%v", err)
-		http.Error(w, s, 500)
+		log.Println(err)
+		return
 	}
 }
 
 func logsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
 	interval := r.URL.Query().Get("interval")
 	if interval != "day" && interval != "week" && interval != "month" {
-		http.Error(w, "invalid interval parameter", http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 
 	err := logs.LogsRead(w, interval)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 }
@@ -77,8 +83,10 @@ func Routes() {
 	go logs.Logs(errs)
 	go func() {
 		for {
-			err := <-errs
-			fmt.Println(err)
+			select {
+			case err := <-errs:
+				log.Println(err)
+			}
 		}
 	}()
 }

@@ -1,13 +1,13 @@
 package logs
 
 import (
-	"time"
-	"fmt"
-	"os"
-	"encoding/json"
 	"bufio"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/rprobaina/lpfs"
 )
@@ -21,9 +21,12 @@ type jsonObject struct {
 
 func Logs(errs chan error) {
 	for {
+		time.Sleep(time.Minute)
+
 		file, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			errs <- fmt.Errorf("Logs: unable to open %s file: %v", logfile, err)
+			continue
 		}
 
 		t := time.Now().Format(time.DateTime)
@@ -31,27 +34,32 @@ func Logs(errs chan error) {
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
 			errs <- fmt.Errorf("Logs: unable to get processes stats: %v", err)
+			continue
 		}
 
 		msg := jsonObject{
 			Date:      t,
 			Processes: p,
 		}
-		b, _ := json.Marshal(msg)
+		b, err := json.Marshal(msg)
+		if err != nil {
+			errs <- fmt.Errorf("Logs: unable to marshal log data: %v", err)
+			continue
+		}
 
 		_, err = file.Write(b)
 		if err != nil {
 			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
+			continue
 		}
 
 		_, err = file.WriteString("\n")
 		if err != nil {
 			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
+			continue
 		}
 
 		file.Close()
-
-		time.Sleep(time.Minute)
 	}
 }
 

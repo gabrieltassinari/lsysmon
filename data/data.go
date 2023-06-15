@@ -8,13 +8,13 @@ import (
     "github.com/rprobaina/lpfs"
 )
 
-type memoryJSON struct{
+type MemoryJSON struct{
 	Buffers int
 	Cached int
 	Free int 
 }
 
-type swapJSON struct{
+type SwapJSON struct{
 	Filename string
 	Size int
 	Used int
@@ -26,7 +26,10 @@ func ProcessesStat(w http.ResponseWriter) error {
 		return err
 	}
 
-	b, _ := json.Marshal(pps)
+	b, err := json.Marshal(pps)
+	if err != nil {
+		return err
+	}
 
 	data := fmt.Sprintf("event: process\ndata: %v\n\n", string(b))
 
@@ -51,7 +54,7 @@ func Memory(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := memoryJSON {
+	msg := MemoryJSON {
 		Buffers: buffers,
 		Cached: cached,
 		Free: free, 
@@ -85,7 +88,7 @@ func Swap(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := swapJSON {
+	msg := SwapJSON {
 		Filename: filename,
 		Size: size,
 		Used: used,

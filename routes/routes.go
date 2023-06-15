@@ -56,10 +56,12 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f := r.URL.Query()
-	interval := f["interval"]
+	interval := r.URL.Query().Get("interval")
+	if interval != "day" && interval != "week" && interval != "month" {
+		http.Error(w, "invalid interval parameter", http.StatusBadRequest)
+	}
 
-	err := logs.LogsRead(w, interval[0])
+	err := logs.LogsRead(w, interval)
 	if err != nil {
 		return
 	}

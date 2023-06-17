@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 
-	"lsysmon/routes"
+	"github.com/gabrieltassinari/lsysmon/routes"
 )
 
 func main() {

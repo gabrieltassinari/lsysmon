@@ -1,15 +1,15 @@
 package routes
 
 import (
+	"bufio"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	"encoding/json"
 	"strconv"
-	"bufio"
-	"fmt"
+	"testing"
 
-	"lsysmon/data"
+	"github.com/gabrieltassinari/lsysmon/data"
 	"github.com/rprobaina/lpfs"
 )
 
@@ -57,7 +57,7 @@ func TestSse(t *testing.T) {
 				t.Errorf("invalid response from uptime event, err: %v", err)
 			}
 		}
-		
+
 		if scanner.Text() == "event: swap" {
 			scanner.Scan()
 
@@ -129,7 +129,7 @@ func TestLogs(t *testing.T) {
 		t.Errorf("status: %v, code: %v", http.StatusOK, rr.Code)
 	}
 	fmt.Printf("logsHandler() month: %v\n", rr.Code)
-	
+
 	req = httptest.NewRequest(http.MethodGet, "/logs?interval=invalid", nil)
 	logsHandler(rr, req)
 

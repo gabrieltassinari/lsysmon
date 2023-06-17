@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"lsysmon/data"
-	"lsysmon/logs"
+	"github.com/gabrieltassinari/lsysmon/data"
+	"github.com/gabrieltassinari/lsysmon/logs"
 )
 
 func sseHandler(w http.ResponseWriter, r *http.Request) {

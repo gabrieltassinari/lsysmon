@@ -1,4 +1,4 @@
-module lsysmon
+module github.com/gabrieltassinari/lsysmon
 
 go 1.20
 

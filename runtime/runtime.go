@@ -1,23 +1,23 @@
-package data
+package runtime
 
 import (
-    "fmt"
-    "net/http"
-    "encoding/json"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
-    "github.com/rprobaina/lpfs"
+	"github.com/rprobaina/lpfs"
 )
 
-type MemoryJSON struct{
+type MemoryJSON struct {
 	Buffers int
-	Cached int
-	Free int 
+	Cached  int
+	Free    int
 }
 
-type SwapJSON struct{
+type SwapJSON struct {
 	Filename string
-	Size int
-	Used int
+	Size     int
+	Used     int
 }
 
 func ProcessesStat(w http.ResponseWriter) error {
@@ -54,10 +54,10 @@ func Memory(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := MemoryJSON {
+	msg := MemoryJSON{
 		Buffers: buffers,
-		Cached: cached,
-		Free: free, 
+		Cached:  cached,
+		Free:    free,
 	}
 
 	b, err := json.Marshal(msg)
@@ -88,10 +88,10 @@ func Swap(w http.ResponseWriter) error {
 		return err
 	}
 
-	msg := SwapJSON {
+	msg := SwapJSON{
 		Filename: filename,
-		Size: size,
-		Used: used,
+		Size:     size,
+		Used:     used,
 	}
 
 	b, err := json.Marshal(msg)
@@ -104,7 +104,7 @@ func Swap(w http.ResponseWriter) error {
 	fmt.Fprintf(w, data)
 
 	return nil
-}	
+}
 
 func Uptime(w http.ResponseWriter) error {
 	uptime, err := lpfs.GetUptimeSystem()

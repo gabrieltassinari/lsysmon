@@ -1,6 +1,3 @@
-const response = await fetch("http://localhost:8080/labels");
-const jsonData = await response.json();
-
 let eventSource = new EventSource("/sse");
 let currentPid = 1;
 
@@ -22,8 +19,8 @@ selectRange.addEventListener('change', function() {
 
 				// Search all pid along log file
 				for (let i = 0; i < data.length; ++i) {
-					for (let j = 0; j < data[i].Processes.length; ++j) {
-						map.set(data[i].Processes[j].Pid, data[i].Processes[j].Comm)
+					for (let j = 0; j < data[i].length; ++j) {
+						map.set(data[i][j].Pid, data[i][j].Comm)
 					}
 				}
 
@@ -47,9 +44,9 @@ selectRange.addEventListener('change', function() {
 						clearPlotData(memoryPlot);
 
 						for (let i = 0; i < data.length; ++i) {
-							for (let j = 0; j < data[i].Processes.length; ++j) {
-								if (data[i].Processes[j].Pid == item[0]) {
-									addPlotData(ptimePlot, data[i].Processes[j], data[i].Date);
+							for (let j = 0; j < data[i].length; ++j) {
+								if (data[i][j].Pid == item[0]) {
+									addPlotData(ptimePlot, data[i][j], "");
 									break
 								}
 							}

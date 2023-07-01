@@ -1,118 +1,92 @@
 package logs
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/gabrieltassinari/lsysmon/database"
 	"github.com/rprobaina/lpfs"
 )
 
-const logfile = "logs.txt"
-
-type jsonObject struct {
-	Date      string
-	Processes []lpfs.Procstat
-}
-
-func Logs(errs chan error) {
+func WriteLogs(errs chan error) {
 	for {
 		time.Sleep(time.Minute)
 
-		file, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		db, err := database.OpenConnection()
 		if err != nil {
-			errs <- fmt.Errorf("Logs: unable to open %s file: %v", logfile, err)
+			errs <- fmt.Errorf("Write: %v", err)
 			continue
 		}
 
-		t := time.Now().Format(time.DateTime)
+		defer db.Close()
 
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
-			errs <- fmt.Errorf("Logs: unable to get processes stats: %v", err)
+			errs <- fmt.Errorf("Write: %v", err)
 			continue
 		}
 
-		msg := jsonObject{
-			Date:      t,
-			Processes: p,
-		}
-		b, err := json.Marshal(msg)
+		b, err := json.Marshal(p)
 		if err != nil {
-			errs <- fmt.Errorf("Logs: unable to marshal log data: %v", err)
-			continue
+			errs <- fmt.Errorf("Write: %v", err)
 		}
 
-		_, err = file.Write(b)
+		sql := `INSERT INTO processes (processes_date, processes_stat) VALUES ($1, $2)`
+
+		_, err = db.Exec(sql, time.Now(), b)
 		if err != nil {
-			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
+			errs <- fmt.Errorf("Query: %v", err)
 			continue
 		}
-
-		_, err = file.WriteString("\n")
-		if err != nil {
-			errs <- fmt.Errorf("Logs: unable to write in %s file: %v", logfile, err)
-			continue
-		}
-
-		file.Close()
 	}
 }
 
-func LogsRead(w http.ResponseWriter, interval string) error {
-	file, err := os.Open(logfile)
+func ReadProcesses(w http.ResponseWriter, interval string) error {
+	db, err := database.OpenConnection()
 	if err != nil {
-		return fmt.Errorf("unable to open %s file: %v", logfile, err)
+		return err
 	}
 
-	fscanner := bufio.NewScanner(file)
+	var start string
+	end := time.Now()
 
-	buffer := make([]byte, 0, bufio.MaxScanTokenSize)
-	fscanner.Buffer(buffer, 1024*1024)
+	switch interval {
+	case "day":
+		start = end.AddDate(0, 0, -1).Format(time.DateTime)
+	case "week":
+		start = end.AddDate(0, 0, -7).Format(time.DateTime)
+	case "month":
+		start = end.AddDate(0, -1, 0).Format(time.DateTime)
+	default:
+		return err
+	}
 
-	var start time.Time
-	var find []byte
+	sql := `SELECT processes_stat FROM processes WHERE processes_date >= $1 AND processes_date < $2`
 
-	endstr := time.Now().Format(time.DateTime)
-	end, err := time.Parse(time.DateTime, endstr)
+	rows, err := db.Query(sql, start, end.Format(time.DateTime))
 	if err != nil {
-		return fmt.Errorf("unable to parse date in %s file: %v", logfile, err)
+		return err
 	}
 
-	// TODO: Handle when last day/month doesnt have data
-	if interval == "day" {
-		start = end.AddDate(0, 0, -1)
-		find = []byte(start.Format(time.DateOnly)[:10])
-	}
+	var s []byte
+	s = append(s, []byte("[")...)
 
-	if interval == "week" {
-		// TODO: FIX WEEK
-		start = end.AddDate(0, 0, -7)
-	}
+	for rows.Next() {
+		var data []byte
 
-	if interval == "month" {
-		start = end.AddDate(0, 0, 0)
-		find = []byte(start.Format(time.DateOnly)[:7])
-	}
-
-	s := []byte("[")
-
-	// Iterating each line of the file
-	for fscanner.Scan() {
-		if bytes.Contains(fscanner.Bytes(), find) {
-			s = append(s, fscanner.Bytes()...)
-			s = append(s, []byte(",")...)
+		if err := rows.Scan(&data); err != nil {
+			return err
 		}
+
+		s = append(s, data...)
+		s = append(s, []byte(",")...)
 	}
 
 	s = s[:len(s)-1]
 	s = append(s, []byte("]")...)
 
-	w.Write([]byte(s))
-
+	w.Write(s)
 	return nil
 }

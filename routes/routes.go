@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -47,22 +46,27 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 
 func logsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
-	}
+	} else if r.Method == "GET" {
+		interval := r.FormValue("interval")
+		pid := r.FormValue("pid")
 
-	interval := r.URL.Query().Get("interval")
-	fmt.Println("Interval: ", interval)
-	if interval != "day" && interval != "week" && interval != "month" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	err := logs.ReadProcesses(w, interval)
-	if err != nil {
-		log.Println(err)
-		return
+		if pid != "" {
+			err := logs.ReadProcess(w, interval, pid)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		} else {
+			err := logs.ReadProcesses(w, interval)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
 	}
 }
 

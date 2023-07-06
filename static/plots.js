@@ -59,7 +59,9 @@ function createChart(ctx, data, label) {
 					grid: {
 						display: false
 					},
-					ticks: {}
+					ticks: {
+						callback: () => ('')
+					}
 				}
 			},
 			interaction: {

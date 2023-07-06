@@ -1,28 +1,26 @@
 let eventSource = new EventSource("/sse");
-let currentPid = 1;
+var currentPid = 1;
+var interval = "";
 
 addListeners();
 
 let selectRange = document.getElementById('opts');
 
 selectRange.addEventListener('change', function() {
-	if (this.value != "runtime") {
+	interval = this.value;
+	if (interval != "runtime") {
 		eventSource.close();
 
 		clearPlotData(ptimePlot);
 		clearPlotData(memoryPlot);
 
-		fetch(`http://localhost:8080/logs?interval=${this.value}`)
+		fetch(`http://localhost:8080/logs?interval=${interval}`)
 			.then((response) => response.json())
 			.then((data) => {
 				var map = new Map();
 
-				// Search all pid along log file
-				for (let i = 0; i < data.length; ++i) {
-					for (let j = 0; j < data[i].length; ++j) {
-						map.set(data[i][j].Pid, data[i][j].Comm)
-					}
-				}
+				for (let i = 0; i < data.length; ++i)
+					map.set(data[i].Pid, data[i].Comm);
 
 				let rows = document.getElementById("rows")
 				rows.innerHTML = "";
@@ -43,15 +41,18 @@ selectRange.addEventListener('change', function() {
 						clearPlotData(ptimePlot);
 						clearPlotData(memoryPlot);
 
-						for (let i = 0; i < data.length; ++i) {
-							for (let j = 0; j < data[i].length; ++j) {
-								if (data[i][j].Pid == item[0]) {
-									addPlotData(ptimePlot, data[i][j], "");
-									break
-								}
-							}
-						}
+						fetch(`http://localhost:8080/logs?interval=${interval}&pid=${item[0]}`)
+							.then((response) => response.json())
+							.then((data) => {
+								ptimePlot.data.datasets[0].data = data["Utime"]
+								ptimePlot.data.datasets[1].data = data["Stime"]
+								ptimePlot.data.datasets[2].data = data["Cutime"]
+								ptimePlot.data.datasets[3].data = data["Cstime"]
+								ptimePlot.data.labels = data["Date"]
+								ptimePlot.update();
+							});
 					}
+
 					rows.appendChild(tr);
 				}
 

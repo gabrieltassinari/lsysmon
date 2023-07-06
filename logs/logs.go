@@ -10,6 +10,23 @@ import (
 	"github.com/rprobaina/lpfs"
 )
 
+func readInterval(t time.Time, interval string) (string, error) {
+	var start string
+
+	switch interval {
+	case "day":
+		start = t.AddDate(0, 0, -1).Format(time.DateTime)
+	case "week":
+		start = t.AddDate(0, 0, -7).Format(time.DateTime)
+	case "month":
+		start = t.AddDate(0, -1, 0).Format(time.DateTime)
+	default:
+		return "", fmt.Errorf("Invalid time interval.")
+	}
+
+	return start, nil
+}
+
 func WriteLogs(errs chan error) {
 	for {
 		time.Sleep(time.Minute)
@@ -35,12 +52,87 @@ func WriteLogs(errs chan error) {
 
 		sql := `INSERT INTO processes (processes_date, processes_stat) VALUES ($1, $2)`
 
-		_, err = db.Exec(sql, time.Now(), b)
+		_, err = db.Exec(sql, time.Now(), string(b))
 		if err != nil {
 			errs <- fmt.Errorf("Query: %v", err)
 			continue
 		}
 	}
+}
+
+func ReadProcess(w http.ResponseWriter, interval string, pid string) error {
+	db, err := database.OpenConnection()
+	if err != nil {
+		return err
+	}
+
+	end := time.Now()
+
+	start, err := readInterval(end, interval)
+	if err != nil {
+		return err
+	}
+	sql :=
+		`SELECT
+			(elem->'Utime'),
+			(elem->'Stime'),
+			(elem->'Cutime'),
+			(elem->'Cstime'),
+			processes_date
+		 FROM
+			processes
+		 CROSS JOIN
+			jsonb_array_elements(processes_stat) elem
+		 WHERE
+			(elem->>'Pid') = $1
+			AND processes_date > $2
+			AND processes_date < $3`
+
+	rows, err := db.Query(sql, pid, start, end.Format(time.DateTime))
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type Process struct {
+		Utime  []int
+		Stime  []int
+		Cutime []int
+		Cstime []int
+		Date   []string
+	}
+
+	var p Process
+
+	for rows.Next() {
+		var (
+			utime  int
+			stime  int
+			cutime int
+			cstime int
+			date   time.Time
+		)
+
+		if err := rows.Scan(&utime, &stime, &cutime, &cstime, &date); err != nil {
+			return err
+		}
+
+		p.Utime = append(p.Utime, utime)
+		p.Stime = append(p.Utime, stime)
+		p.Cutime = append(p.Utime, cutime)
+		p.Cstime = append(p.Utime, cstime)
+		p.Date = append(p.Date, date.Format(time.DateTime))
+
+	}
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	w.Write(b)
+
+	return nil
 }
 
 func ReadProcesses(w http.ResponseWriter, interval string) error {
@@ -49,44 +141,55 @@ func ReadProcesses(w http.ResponseWriter, interval string) error {
 		return err
 	}
 
-	var start string
 	end := time.Now()
 
-	switch interval {
-	case "day":
-		start = end.AddDate(0, 0, -1).Format(time.DateTime)
-	case "week":
-		start = end.AddDate(0, 0, -7).Format(time.DateTime)
-	case "month":
-		start = end.AddDate(0, -1, 0).Format(time.DateTime)
-	default:
+	start, err := readInterval(end, interval)
+	if err != nil {
 		return err
 	}
 
-	sql := `SELECT processes_stat FROM processes WHERE processes_date >= $1 AND processes_date < $2`
+	sql :=
+		`SELECT
+			(elem->>'Pid'),
+			(elem->>'Comm'),
+			(elem->>'State')
+		 FROM
+			processes
+		 CROSS JOIN
+			jsonb_array_elements(processes_stat) elem
+		 WHERE
+			processes_date >= $1
+			AND processes_date < $2`
 
 	rows, err := db.Query(sql, start, end.Format(time.DateTime))
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
-	var s []byte
-	s = append(s, []byte("[")...)
+	type Process struct {
+		Pid   string
+		Comm  string
+		State string
+	}
+
+	var processes []Process
 
 	for rows.Next() {
-		var data []byte
-
-		if err := rows.Scan(&data); err != nil {
+		var scans Process
+		if err := rows.Scan(&scans.Pid, &scans.Comm, &scans.State); err != nil {
 			return err
 		}
 
-		s = append(s, data...)
-		s = append(s, []byte(",")...)
+		processes = append(processes, scans)
 	}
 
-	s = s[:len(s)-1]
-	s = append(s, []byte("]")...)
+	b, err := json.Marshal(processes)
+	if err != nil {
+		return err
+	}
 
-	w.Write(s)
+	w.Write(b)
+
 	return nil
 }

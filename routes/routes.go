@@ -57,12 +57,14 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 		if pid != "" {
 			err := logs.ReadProcess(w, interval, pid)
 			if err != nil {
+				http.Error(w, "400 - Bad Request!", http.StatusBadRequest)
 				log.Println(err)
 				return
 			}
 		} else {
 			err := logs.ReadProcesses(w, interval)
 			if err != nil {
+				http.Error(w, "400 - Bad Request!", http.StatusBadRequest)
 				log.Println(err)
 				return
 			}

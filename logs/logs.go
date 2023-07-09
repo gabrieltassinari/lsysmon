@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gabrieltassinari/lsysmon/database"
@@ -37,8 +38,6 @@ func WriteLogs(errs chan error) {
 			continue
 		}
 
-		defer db.Close()
-
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
 			errs <- fmt.Errorf("Write: %v", err)
@@ -60,7 +59,7 @@ func WriteLogs(errs chan error) {
 	}
 }
 
-func ReadProcess(w http.ResponseWriter, interval string, pid string) error {
+func ReadProcess(w http.ResponseWriter, interval string, pids string) error {
 	db, err := database.OpenConnection()
 	if err != nil {
 		return err
@@ -72,6 +71,12 @@ func ReadProcess(w http.ResponseWriter, interval string, pid string) error {
 	if err != nil {
 		return err
 	}
+
+	pid, err := strconv.Atoi(pids)
+	if err != nil {
+		return err
+	}
+
 	sql :=
 		`SELECT
 			(elem->'Utime'),
@@ -123,6 +128,10 @@ func ReadProcess(w http.ResponseWriter, interval string, pid string) error {
 		p.Cstime = append(p.Utime, cstime)
 		p.Date = append(p.Date, date.Format(time.DateTime))
 
+	}
+
+	if len(p.Utime) == 0 {
+		return fmt.Errorf("No results were returned by the query")
 	}
 
 	b, err := json.Marshal(p)
@@ -182,6 +191,10 @@ func ReadProcesses(w http.ResponseWriter, interval string) error {
 		}
 
 		processes = append(processes, scans)
+	}
+
+	if len(processes) == 0 {
+		return fmt.Errorf("No results were returned by the query")
 	}
 
 	b, err := json.Marshal(processes)

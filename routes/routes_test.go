@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gabrieltassinari/lsysmon/data"
+	"github.com/gabrieltassinari/lsysmon/runtime"
 	"github.com/rprobaina/lpfs"
 )
 
@@ -40,7 +40,7 @@ func TestSse(t *testing.T) {
 		if scanner.Text() == "event: memory" {
 			scanner.Scan()
 
-			var m data.MemoryJSON
+			var m runtime.MemoryJSON
 
 			err := json.Unmarshal(scanner.Bytes()[6:], &m)
 			if err != nil {
@@ -61,7 +61,7 @@ func TestSse(t *testing.T) {
 		if scanner.Text() == "event: swap" {
 			scanner.Scan()
 
-			var s data.SwapJSON
+			var s runtime.SwapJSON
 
 			err := json.Unmarshal(scanner.Bytes()[6:], &s)
 			if err != nil {
@@ -91,50 +91,97 @@ func TestSse(t *testing.T) {
 	fmt.Printf("sseHandler(): %v\n", res.StatusCode)
 }
 
-func TestLabels(t *testing.T) {
-	rr := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/labels", nil)
+func TestReadProcess(t *testing.T) {
+	rrd := httptest.NewRecorder()
 
-	labelsHandler(rr, req)
+	req := httptest.NewRequest(http.MethodGet, "/logs?interval=day&pid=1", nil)
+	logsHandler(rrd, req)
 
-	if http.StatusOK != rr.Code {
-		t.Errorf("status: %v, code: %v", http.StatusOK, rr.Code)
+	if http.StatusOK != rrd.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrd.Code)
 	}
-	fmt.Printf("labelsHandler(): %v\n", rr.Code)
+	fmt.Printf("ReadProcess() day: %v\n", rrd.Code)
+
+	rrw := httptest.NewRecorder()
+
+	req = httptest.NewRequest(http.MethodGet, "/logs?interval=week&pid=1", nil)
+	logsHandler(rrw, req)
+
+	if http.StatusOK != rrw.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrw.Code)
+	}
+	fmt.Printf("ReadProcess() week: %v\n", rrw.Code)
+
+	rrm := httptest.NewRecorder()
+
+	req = httptest.NewRequest(http.MethodGet, "/logs?interval=month&pid=1", nil)
+	logsHandler(rrm, req)
+
+	if http.StatusOK != rrm.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrm.Code)
+	}
+	fmt.Printf("ReadProcess() month: %v\n", rrm.Code)
+
+	rri := httptest.NewRecorder()
+
+	req = httptest.NewRequest(http.MethodGet, "/logs?interval=month&pid=error", nil)
+	logsHandler(rri, req)
+
+	if http.StatusOK == rri.Code {
+		t.Errorf("status: %v, code: %v", http.StatusBadRequest, rri.Code)
+	}
+	fmt.Printf("ReadProcess() invalid: %v\n", rri.Code)
+
+	rrj := httptest.NewRecorder()
+
+	req = httptest.NewRequest(http.MethodGet, "/logs?interval=month&pid=4194305", nil)
+	logsHandler(rrj, req)
+
+	if http.StatusOK == rri.Code {
+		t.Errorf("status: %v, code: %v", http.StatusBadRequest, rrj.Code)
+	}
+	fmt.Printf("ReadProcess() invalid: %v\n", rrj.Code)
+
 }
 
-func TestLogs(t *testing.T) {
-	rr := httptest.NewRecorder()
+func TestReadProcesses(t *testing.T) {
+	rrd := httptest.NewRecorder()
 
 	req := httptest.NewRequest(http.MethodGet, "/logs?interval=day", nil)
-	logsHandler(rr, req)
+	logsHandler(rrd, req)
 
-	if http.StatusOK != rr.Code {
-		t.Errorf("status: %v, code: %v", http.StatusOK, rr.Code)
+	if http.StatusOK != rrd.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrd.Code)
 	}
-	fmt.Printf("logsHandler() day: %v\n", rr.Code)
+	fmt.Printf("ReadProcesses() day: %v\n", rrd.Code)
+
+	rrw := httptest.NewRecorder()
 
 	req = httptest.NewRequest(http.MethodGet, "/logs?interval=week", nil)
-	logsHandler(rr, req)
+	logsHandler(rrw, req)
 
-	if http.StatusOK != rr.Code {
-		t.Errorf("status: %v, code: %v", http.StatusOK, rr.Code)
+	if http.StatusOK != rrw.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrw.Code)
 	}
-	fmt.Printf("logsHandler() week: %v\n", rr.Code)
+	fmt.Printf("ReadProcesses() week: %v\n", rrw.Code)
+
+	rrm := httptest.NewRecorder()
 
 	req = httptest.NewRequest(http.MethodGet, "/logs?interval=month", nil)
-	logsHandler(rr, req)
+	logsHandler(rrm, req)
 
-	if http.StatusOK != rr.Code {
-		t.Errorf("status: %v, code: %v", http.StatusOK, rr.Code)
+	if http.StatusOK != rrm.Code {
+		t.Errorf("status: %v, code: %v", http.StatusOK, rrm.Code)
 	}
-	fmt.Printf("logsHandler() month: %v\n", rr.Code)
+	fmt.Printf("ReadProcesses() month: %v\n", rrm.Code)
+
+	rri := httptest.NewRecorder()
 
 	req = httptest.NewRequest(http.MethodGet, "/logs?interval=invalid", nil)
-	logsHandler(rr, req)
+	logsHandler(rri, req)
 
-	if http.StatusBadRequest != rr.Code {
-		t.Errorf("status: %v, code: %v", http.StatusBadRequest, rr.Code)
+	if http.StatusOK == rri.Code {
+		t.Errorf("status: %v, code: %v", http.StatusBadRequest, rri.Code)
 	}
-	fmt.Printf("logsHandler() invalid: %v\n", rr.Code)
+	fmt.Printf("ReadProcesses() invalid: %v\n", rri.Code)
 }

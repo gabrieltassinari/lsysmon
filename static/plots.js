@@ -9,6 +9,9 @@ const swapPlot = createChart(swapCtx, [], 'Swap in use (GB/s)');
 const ptimeCtx = document.getElementById('ptime');
 const ptimePlot = createChart(ptimeCtx, [], 'Process time');
 
+const cpuCtx = document.getElementById('cpu');
+const cpuPlot = createChart(cpuCtx, [], 'Cpu percentage');
+
 ptimePlot.options.maintainAspectRatio = false
 ptimePlot.data.datasets = [{
 				label: "Utime",

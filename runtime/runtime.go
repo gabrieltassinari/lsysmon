@@ -8,6 +8,12 @@ import (
 	"github.com/rprobaina/lpfs"
 )
 
+var (
+	prevIdle  int
+	prevTotal int
+	cpuUsage  float64
+)
+
 type MemoryJSON struct {
 	Buffers int
 	Cached  int
@@ -113,6 +119,63 @@ func Uptime(w http.ResponseWriter) error {
 	}
 
 	data := fmt.Sprintf("event: uptime\ndata: %f\n\n", uptime)
+
+	fmt.Fprintf(w, data)
+
+	return nil
+}
+
+func Cpu(w http.ResponseWriter) error {
+	user, err := lpfs.GetCpuUserTime()
+	if err != nil {
+		return err
+	}
+
+	nice, err := lpfs.GetCpuNiceTime()
+	if err != nil {
+		return err
+	}
+
+	system, err := lpfs.GetCpuSystemTime()
+	if err != nil {
+		return err
+	}
+
+	idle, err := lpfs.GetCpuIdleTime()
+	if err != nil {
+		return err
+	}
+
+	iowait, err := lpfs.GetCpuIowaitTime()
+	if err != nil {
+		return err
+	}
+
+	irq, err := lpfs.GetCpuIrqTime()
+	if err != nil {
+		return err
+	}
+
+	softirq, err := lpfs.GetCpuSoftirqTime()
+	if err != nil {
+		return err
+	}
+
+	steal, err := lpfs.GetCpuStealTime()
+	if err != nil {
+		return err
+	}
+
+	total := user + nice + system + idle + iowait + irq + softirq + steal
+
+	deltaIdle := idle - prevIdle
+	deltaTotal := total - prevTotal
+	cpuUsage = (1.0 - float64(deltaIdle)/float64(deltaTotal)) * 100.0
+
+	prevIdle = idle
+	prevTotal = total
+
+	data := fmt.Sprintf("event: cpu\ndata: %f\n\n", cpuUsage)
 
 	fmt.Fprintf(w, data)
 

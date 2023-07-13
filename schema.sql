@@ -6,4 +6,9 @@ CREATE TABLE processes
 	processes_date TIMESTAMP NOT NULL,
 	processes_stat jsonb NOT NULL
 );
-
+CREATE TABLE cpu
+(
+	id serial NOT NULL PRIMARY KEY,
+	cpu_date TIMESTAMP NOT NULL,
+	cpu_usage REAL NOT NULL
+);

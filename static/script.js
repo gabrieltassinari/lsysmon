@@ -68,6 +68,11 @@ selectRange.addEventListener('change', function() {
 });
 
 function addListeners() {
+	eventSource.addEventListener('cpu', e => {
+		cpuPlot.data.datasets[0].data.push(e.data);
+		cpuPlot.data.labels.push('');
+		cpuPlot.update();
+	});
 	eventSource.addEventListener('memory', e => {
 		//console.log(e);
 	});

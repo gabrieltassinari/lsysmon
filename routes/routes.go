@@ -39,6 +39,11 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if err = runtime.Cpu(w); err != nil {
+			log.Println(err)
+			return
+		}
+
 		w.(http.Flusher).Flush()
 		time.Sleep(time.Second)
 	}

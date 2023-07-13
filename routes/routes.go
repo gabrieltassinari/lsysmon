@@ -78,7 +78,10 @@ func Routes() {
 	http.HandleFunc("/logs", logsHandler)
 
 	errs := make(chan error, 1)
+
 	go logs.WriteLogs(errs)
+	go logs.WriteCpuUsage(errs)
+
 	go func() {
 		for {
 			select {

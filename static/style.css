@@ -9,16 +9,18 @@ body {
 
 .container{
 	display: grid;
-	grid-template-columns: 33vw 33vw 33vw;
-	grid-template-rows: 33vh 33vh 33vh;
+	grid-template-columns: repeat(3, minmax(0, 33vw));
+	grid-template-rows: repeat(3, minmax(0, 33vh));
 	grid-template-areas:
 	"list ptime ptime"
-	"list memory swap";
+	"list memory swap"
+	"list cpu .";
 }
 
 .ptime {grid-area: ptime;}
 .memory {grid-area: memory;}
 .swap {grid-area: swap;}
+.cpu {grid-area: cpu;}
 
 .chart{
 	width: 100%;

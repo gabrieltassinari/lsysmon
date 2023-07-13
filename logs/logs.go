@@ -34,27 +34,111 @@ func WriteLogs(errs chan error) {
 
 		db, err := database.OpenConnection()
 		if err != nil {
-			errs <- fmt.Errorf("Write: %v", err)
+			errs <- fmt.Errorf("Write logs: %v", err)
 			continue
 		}
 
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
-			errs <- fmt.Errorf("Write: %v", err)
+			errs <- fmt.Errorf("Write logs: %v", err)
 			continue
 		}
 
 		b, err := json.Marshal(p)
 		if err != nil {
-			errs <- fmt.Errorf("Write: %v", err)
+			errs <- fmt.Errorf("Write logs: %v", err)
 		}
 
 		sql := `INSERT INTO processes (processes_date, processes_stat) VALUES ($1, $2)`
 
 		_, err = db.Exec(sql, time.Now(), string(b))
 		if err != nil {
-			errs <- fmt.Errorf("Query: %v", err)
+			errs <- fmt.Errorf("Query logs: %v", err)
 			continue
+		}
+	}
+}
+
+func WriteCpuUsage(errs chan error) {
+	for {
+		time.Sleep(time.Minute)
+
+		var prevIdle, prevTotal int
+		var cpuUsage float64
+
+		db, err := database.OpenConnection()
+		if err != nil {
+			errs <- fmt.Errorf("Write cpu: %v", err)
+			continue
+		}
+
+		for i := 0; i < 2; i++ {
+			user, err := lpfs.GetCpuUserTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			nice, err := lpfs.GetCpuNiceTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			system, err := lpfs.GetCpuSystemTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			idle, err := lpfs.GetCpuIdleTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			iowait, err := lpfs.GetCpuIowaitTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			irq, err := lpfs.GetCpuIrqTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			softirq, err := lpfs.GetCpuSoftirqTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			steal, err := lpfs.GetCpuStealTime()
+			if err != nil {
+				errs <- fmt.Errorf("Write cpu: %v", err)
+				continue
+			}
+
+			total := user + nice + system + idle + iowait + irq + softirq + steal
+
+			if i > 0 {
+				deltaIdle := idle - prevIdle
+				deltaTotal := total - prevTotal
+				cpuUsage = (1.0 - float64(deltaIdle)/float64(deltaTotal)) * 100.0
+			}
+
+			prevIdle = idle
+			prevTotal = total
+			time.Sleep(time.Second)
+		}
+
+		sql := `INSERT INTO cpu (cpu_date, cpu_usage) VALUES ($1, $2)`
+
+		_, err = db.Exec(sql, time.Now(), cpuUsage)
+		if err != nil {
+			errs <- fmt.Errorf("Insert cpu: %v", err)
 		}
 	}
 }
@@ -186,6 +270,7 @@ func ReadProcesses(w http.ResponseWriter, interval string) error {
 
 	for rows.Next() {
 		var scans Process
+
 		if err := rows.Scan(&scans.Pid, &scans.Comm, &scans.State); err != nil {
 			return err
 		}
@@ -198,6 +283,66 @@ func ReadProcesses(w http.ResponseWriter, interval string) error {
 	}
 
 	b, err := json.Marshal(processes)
+	if err != nil {
+		return err
+	}
+
+	w.Write(b)
+
+	return nil
+}
+
+func ReadCpuUsage(w http.ResponseWriter, interval string) error {
+	db, err := database.OpenConnection()
+	if err != nil {
+		return err
+	}
+
+	end := time.Now()
+
+	start, err := readInterval(end, interval)
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`SELECT
+			cpu_date,
+			cpu_usage
+		 FROM
+			cpu
+		 WHERE
+			cpu_date >= $1 AND
+			cpu_date < $2`
+
+	rows, err := db.Query(sql, start, end.Format(time.DateTime))
+
+	type Cpu struct {
+		Date  []string
+		Usage []float64
+	}
+
+	var c Cpu
+
+	for rows.Next() {
+		var (
+			date  time.Time
+			usage float64
+		)
+
+		if err := rows.Scan(&date, &usage); err != nil {
+			return err
+		}
+
+		c.Date = append(c.Date, date.Format(time.DateTime))
+		c.Usage = append(c.Usage, usage)
+	}
+
+	if len(c.Usage) == 0 {
+		return fmt.Errorf("No results were returned by the query")
+	}
+
+	b, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}

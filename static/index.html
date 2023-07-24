@@ -3,52 +3,101 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale-1.0">
 	<title> Lsysmon </title>
-	<link rel="stylesheet" type="text/css" href="style.css">
+	<!--<link rel="stylesheet" type="text/css" href="style.css">-->
 	<body>
 
-		<select id="opts">
-			<option value="runtime">Runtime</option>
-			<option value="day">Last day</option>
-			<option value="week">Last week</option>
-			<option value="month">Last month</option>
-		</select>
+		<div class="nav-top">
+			<a for="toggle" onclick="navtop()">&#9776</a>
+			<select>
+				<option> abc </option>
+				<option> dfc </option>
+			</select>
+		</div>
 
-		<main class="container">
-			<div>
-				<table>
-					<thead>
-						<tr>
-							<th>Pid</th>
-							<th>Comm</th>
-							<th>State</th>
-						</tr>
-					</thead>
-					<tbody id="rows"></tbody>
-
-				</table>
+		<div class="nav-side" id="nav-side">
+			<div class="nav-content">
+				<a href="javascript:void(0)" class="close" onClick="navtop()">&times;</a>
+				<a href="#">Home</a>
+				<a href="#">Processes</a>
+				<a href="#">Error logs</a>
+				<a href="#">Home</a>
+				<a href="#">Processes</a>
+				<a href="#">Error logs</a>
 			</div>
-
-			<div class="chart memory">
-				<canvas id="memory"></canvas>
-			</div>
-
-			<div class="chart swap">
-				<canvas id="swap"></canvas>
-			</div>
-
-			<div class="chart cpu">
-				<canvas id="cpu"></canvas>
-			</div>
-
-			<div class="chart ptime">
-				<canvas id="ptime"></canvas>
-			</div>
-		</main>
-
-
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script type="module" src="script.js"></script>
-	<script type="text/javascript" src="plots.js"></script>
+		</div>
 
 	</body>
 </html>
+
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	text-decoration: none;
+	color: white;
+}
+
+body {
+	background-color: #E8EBED;
+}
+
+.nav-top {
+	display: flex;
+	padding: 5px 10px 5px 10px;
+	justify-content: space-between;
+	position: fixed;
+	width: 100vw;
+	height: 30px;
+	background: #000000;
+}
+
+.nav-top a {
+	font-size: 30px;
+}
+
+.nav-top select {
+	float: right
+}
+
+.nav-side {
+	background: #111111;
+	position: fixed;
+	height: 100%;
+	width: 0px;
+	top: 40px;
+	left: 0px;
+	overflow-x: hidden;
+	z-index: 1;
+	transition: 0.3s;
+}
+
+.nav-content {
+	margin-top: 30px
+}
+
+.nav-content a {
+	padding: 8px 8px 8px 32px;
+	color: white;
+	font-size: 18px;
+	display: block;
+}
+
+.nav-side .close {
+	position: absolute;
+	top: 0;
+	right: 30px;
+	font-size: 36px;
+	margin-left: 50px;
+}
+</style>
+
+<script>
+		function navtop() {
+			let size = document.getElementById("nav-side");
+
+				if (size.style.width == "250px")
+					size.style.width = "0px";
+				else
+					size.style.width = "250px";
+		}
+</script>

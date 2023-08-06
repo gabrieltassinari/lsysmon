@@ -3,14 +3,16 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale-1.0">
 	<title> Lsysmon </title>
-	<!--<link rel="stylesheet" type="text/css" href="style.css">-->
-	<body>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<body class="container">
 
 		<div class="nav-top">
 			<a for="toggle" onclick="navtop()">&#9776</a>
-			<select>
-				<option> abc </option>
-				<option> dfc </option>
+			<select id="opts">
+				<option value="runtime">Runtime</option>
+				<option value="day">Last day</option>
+				<option value="week">Last week</option>
+				<option value="month">Last month</option>
 			</select>
 		</div>
 
@@ -26,39 +28,47 @@
 			</div>
 		</div>
 
+			<div class="proc-table">
+				<table>
+					<thead>
+						<tr>
+							<th>Pid</th>
+							<th>Comm</th>
+							<th>State</th>
+						</tr>
+					</thead>
+					<tbody id="rows"></tbody>
+				</table>
+			</div>
+
+		<main class="main">
+
+			<div class="chart ptime">
+				<canvas id="ptime"></canvas>
+			</div>
+
+			<div class="chart memory">
+				<canvas id="memory"></canvas>
+			</div>
+
+			<div class="chart swap">
+				<canvas id="swap"></canvas>
+			</div>
+
+			<div class="chart cpu">
+				<canvas id="cpu"></canvas>
+			</div>
+		</main>
+
+
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script type="module" src="script.js"></script>
+	<script type="text/javascript" src="plots.js"></script>
+
 	</body>
 </html>
 
 <style>
-* {
-	margin: 0;
-	padding: 0;
-	text-decoration: none;
-	color: white;
-}
-
-body {
-	background-color: #E8EBED;
-}
-
-.nav-top {
-	display: flex;
-	padding: 5px 10px 5px 10px;
-	justify-content: space-between;
-	position: fixed;
-	width: 100vw;
-	height: 30px;
-	background: #000000;
-}
-
-.nav-top a {
-	font-size: 30px;
-}
-
-.nav-top select {
-	float: right
-}
-
 .nav-side {
 	background: #111111;
 	position: fixed;

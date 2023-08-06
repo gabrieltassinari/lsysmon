@@ -181,7 +181,7 @@ function addPlotData(chart, data, label) {
 		array.push(data);
 	}
 
-	if (labels.length > 2)
+	if (labels.length > 50)
 		labels.shift();
 
 	labels.push(label);

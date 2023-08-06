@@ -1,20 +1,79 @@
 :root {
-	--color1: #161512;
-	--color2: #999999;
+	--color1: #101116;
+	--color2: #181B1F;
+	--color3: #CCCCDC;
+	--color4: #2E3136FF;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	text-decoration: none;
+	color: var(--color3);
 }
 
 body {
 	background-color: var(--color1);
 }
 
+/* Nav */
+.nav-top {
+	grid-area: nav;
+	display: flex;
+	padding: 5px 10px 5px 10px;
+	justify-content: space-between;
+	position: fixed;
+	width: 100vw;
+	height: 30px;
+	background-color: var(--color2);
+}
+
+.nav-top a {
+	font-size: 30px;
+}
+
+.nav-top select {
+	float: right
+}
+
+#opts {
+	background-color: var(--color2);
+	border: none;
+	color: var(--color3);
+}
+
+/* Processes */
 .container{
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 33vw));
-	grid-template-rows: repeat(3, minmax(0, 33vh));
+	height: 100vh;
+	grid-template-columns: 425px 80fr;
+	grid-template-rows: 40px 1fr;
 	grid-template-areas:
-	"list ptime ptime"
-	"list memory swap"
-	"list cpu .";
+	"nav nav"
+	"proc main"
+}
+
+.main {
+	grid-area: main;
+	display: grid;
+	padding: 25px;
+	height: 100vh;
+
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 1fr 1fr;
+	grid-template-areas:
+	"ptime ptime"
+	"memory swap"
+	"cpu cpu";
+	gap: 10px
+}
+
+.chart{
+	background-color: var(--color2);
+	border-radius: 2px;
+	border: 1px solid var(--color4);
+	height: 33vh;
+	margin: 5px;
 }
 
 .ptime {grid-area: ptime;}
@@ -22,25 +81,19 @@ body {
 .swap {grid-area: swap;}
 .cpu {grid-area: cpu;}
 
-.chart{
-	width: 100%;
-	margin: 5px;
+.proc-table {
+	grid-area: proc;
 }
 
-table {
-	grid-area: list;
-	color: var(--color2);
-}
-
-thead, tbody {display: block;}
-
-thead {height 5vh;}
-
-th {padding-right: 8vw;}
-
-tbody {
-	scrollbar-width: none;
-	height: 90vh;
-	overflow-y: auto;
+table tbody {
+	display: block;
+	max-height: 100vh;
+	overflow-y: scroll;
 	overflow-x: hidden;
+}
+
+table thead{
+	display: table;
+	width: 100%;
+	table-layout: fixed;
 }

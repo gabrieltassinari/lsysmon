@@ -12,6 +12,8 @@ const ptimePlot = createChart(ptimeCtx, [], 'Process time');
 const cpuCtx = document.getElementById('cpu');
 const cpuPlot = createChart(cpuCtx, [], 'Cpu percentage');
 
+cpuPlot.options.maintainAspectRatio = false
+
 ptimePlot.options.maintainAspectRatio = false
 ptimePlot.data.datasets = [{
 				label: "Utime",

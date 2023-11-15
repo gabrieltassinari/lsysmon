@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -32,30 +33,46 @@ func WriteLogs(errs chan error) {
 	for {
 		time.Sleep(time.Minute)
 
-		db, err := database.OpenConnection()
+		// TODO: Create a directory to store logs.
+		file := fmt.Sprintf("./logs/%v.log", time.Now().Format(time.DateOnly))
+
+		f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			errs <- fmt.Errorf("Write logs: %v", err)
+			errs <- fmt.Errorf("WriteLogs: %v", err)
 			continue
 		}
 
+		defer f.Close()
+
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
-			errs <- fmt.Errorf("Write logs: %v", err)
+			errs <- fmt.Errorf("WriteLogs: %v", err)
 			continue
 		}
 
 		b, err := json.Marshal(p)
 		if err != nil {
-			errs <- fmt.Errorf("Write logs: %v", err)
-		}
-
-		sql := `INSERT INTO processes (processes_date, processes_stat) VALUES ($1, $2)`
-
-		_, err = db.Exec(sql, time.Now(), string(b))
-		if err != nil {
-			errs <- fmt.Errorf("Query logs: %v", err)
+			errs <- fmt.Errorf("WriteLogs: %v", err)
 			continue
 		}
+
+		// Write func doesn't have breakline by default
+		b = append(b, 10)
+
+		f.Write(b)
+		if err != nil {
+			f.Close()
+			errs <- fmt.Errorf("WriteLogs: %v", err)
+			continue
+		}
+
+		err = f.Close()
+		if err != nil {
+			errs <- fmt.Errorf("WriteLogs: %v", err)
+			continue
+		}
+
+		fmt.Printf("WriteLogs: Sucess writing to %v\n", file)
 	}
 }
 

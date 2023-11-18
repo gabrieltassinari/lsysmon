@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,16 +34,13 @@ func WriteLogs(errs chan error) {
 	for {
 		time.Sleep(time.Minute)
 
-		// TODO: Create a directory to store logs.
-		file := fmt.Sprintf("./logs/%v.log", time.Now().Format(time.DateOnly))
+		file := fmt.Sprintf("./logs/%v.log.gz", time.Now().AddDate(0, 0, -1).Format(time.DateOnly))
 
-		f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		f, err := os.OpenFile("./logs/latest.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			errs <- fmt.Errorf("WriteLogs: %v", err)
 			continue
 		}
-
-		defer f.Close()
 
 		p, err := lpfs.GetPerProcessStat()
 		if err != nil {
@@ -59,7 +57,7 @@ func WriteLogs(errs chan error) {
 		// Write func doesn't have breakline by default
 		b = append(b, 10)
 
-		f.Write(b)
+		_, err = f.Write(b)
 		if err != nil {
 			f.Close()
 			errs <- fmt.Errorf("WriteLogs: %v", err)
@@ -72,7 +70,34 @@ func WriteLogs(errs chan error) {
 			continue
 		}
 
-		fmt.Printf("WriteLogs: Sucess writing to %v\n", file)
+		_, err = os.Stat(file)
+
+		if os.IsNotExist(err) {
+			data, err := os.ReadFile("./logs/latest.log")
+			if err != nil {
+				errs <- fmt.Errorf("readfile: %v", err)
+				continue
+			}
+
+			f, err := os.Create(file)
+			if err != nil {
+				errs <- fmt.Errorf("readfile: %v", err)
+				continue
+			}
+
+			gzw := gzip.NewWriter(f)
+
+			_, err = gzw.Write(data)
+			if err != nil {
+				errs <- fmt.Errorf("gzip: %v", err)
+				continue
+			}
+			gzw.Close()
+
+			os.Remove("./logs/latest.log")
+		}
+
+		fmt.Printf("WriteLogs: Success writing to latest.log\n")
 	}
 }
 
@@ -85,7 +110,7 @@ func WriteCpuUsage(errs chan error) {
 
 		db, err := database.OpenConnection()
 		if err != nil {
-			errs <- fmt.Errorf("Write cpu: %v", err)
+			//errs <- fmt.Errorf("Write cpu: %v", err)
 			continue
 		}
 
